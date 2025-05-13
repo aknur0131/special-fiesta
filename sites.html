@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Кадрлық іс басқару жүйесі</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+      color: #333;
+    }
+    header {
+      background-color: #006666;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+    main {
+      padding: 2rem;
+    }
+    .form-section {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      max-width: 700px;
+      margin: 0 auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .form-section h2 {
+      margin-top: 0;
+      color: #006666;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.4rem;
+      font-size: 0.95rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-top: 0.25rem;
+    }
+    .form-error-message {
+      color: red;
+      font-size: 0.85rem;
+    }
+    .error {
+      border: 1px solid red;
+    }
+    button {
+      display: block;
+      margin: 1.5rem auto 0 auto;
+      padding: 0.6rem 1.2rem;
+      background-color: #006666;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #004d4d;
+    }
+    #popupMessage {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      border: 2px solid #006666;
+      padding: 1rem 2rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      z-index: 1000;
+      color: #006666;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Кадрлық іс басқару жүйесі</h1>
+  </header>
+  <main>
+    <div class="form-section">
+      <h2>Қызметкерді тіркеу</h2>
+      <form id="employeeForm">
+        <label for="name">Аты-жөні:</label>
+        <input type="text" id="name" pattern="[А-Яа-яЁёІіӘәӨөҮүҚқҢңҒғҺһҰұ\s]+" required>
+        <div class="form-error-message" id="nameError"></div>
+
+        <label for="dob">Туған күні:</label>
+        <input type="date" id="dob" required>
+        <div class="form-error-message" id="dobError"></div>
+
+        <label for="gender">Жынысы:</label>
+        <select id="gender" required>
+          <option value="">Таңдаңыз</option>
+          <option value="Ер">Ер</option>
+          <option value="Әйел">Әйел</option>
+        </select>
+        <div class="form-error-message" id="genderError"></div>
+
+        <label for="province">Облыс:</label>
+        <select id="province" required></select>
+        <div class="form-error-message" id="provinceError"></div>
+
+        <label for="district">Аудан/Қала:</label>
+        <select id="district" required></select>
+        <div class="form-error-message" id="districtError"></div>
+
+        <label for="street">Көше:</label>
+        <input type="text" id="street" required>
+        <div class="form-error-message" id="streetError"></div>
+
+        <label for="phone">Телефон:</label>
+        <input type="text" id="phone" pattern="[0-9]+" required>
+        <div class="form-error-message" id="phoneError"></div>
+
+        <label for="experience">Жұмыс өтілі:</label>
+        <textarea id="experience" required></textarea>
+        <div class="form-error-message" id="experienceError"></div>
+
+        <label for="department">Бөлім:</label>
+        <select id="department" required></select>
+        <div class="form-error-message" id="departmentError"></div>
+
+        <label for="position">Қызметі:</label>
+        <select id="position" required></select>
+        <div class="form-error-message" id="positionError"></div>
+
+        <label for="salary">Жалақы:</label>
+        <select id="salary" required>
+          <option value="">Таңдаңыз</option>
+          <option value="100000-150000">100,000 - 150,000</option>
+          <option value="150000-200000">150,000 - 200,000</option>
+          <option value="200000+">200,000-250,000</option>
+        </select>
+        <div class="form-error-message" id="salaryError"></div>
+
+        <button type="submit">Сақтау</button>
+      </form>
+    </div>
+  </main>
+
+  <div id="popupMessage"></div>
+
+  <script>
+    const provinces = {
+  "Абай облысы": [
+    "Семей",
+    "Абай ауданы",
+    "Аягөз ауданы",
+    "Бесқарағай ауданы",
+    "Бородулиха ауданы",
+    "Көкпекті ауданы",
+    "Тарбағатай ауданы",
+    "Үржар ауданы",
+    "Жарма ауданы"
+  ],
+  "Ақмола облысы": [
+    "Көкшетау",
+    "Ақкөл ауданы",
+    "Аршалы ауданы",
+    "Астрахан ауданы",
+    "Атбасар ауданы",
+    "Біржан сал ауданы",
+    "Бұланды ауданы",
+    "Бурабай ауданы",
+    "Егіндікөл ауданы",
+    "Ерейментау ауданы",
+    "Есіл ауданы",
+    "Қорғалжын ауданы",
+    "Сандықтау ауданы",
+    "Шортанды ауданы",
+    "Целиноград ауданы",
+    "Зеренді ауданы",
+    "Жақсы ауданы",
+    "Жарқайың ауданы"
+  ],
+  "Ақтөбе облысы": [
+    "Ақтөбе",
+    "Алға ауданы",
+    "Әйтеке би ауданы",
+    "Байғанин ауданы",
+    "Қарғалы ауданы",
+    "Қобда ауданы",
+    "Хромтау ауданы",
+    "Мәртөк ауданы",
+    "Мұғалжар ауданы",
+    "Ойыл ауданы",
+    "Шалқар ауданы",
+    "Темір ауданы",
+    "Ырғыз ауданы"
+  ],
+  "Алматы облысы": [
+    "Қонаев",
+    "Балқаш ауданы",
+    "Еңбекшіқазақ ауданы",
+    "Іле ауданы",
+    "Қарасай ауданы",
+    "Райымбек ауданы",
+    "Талғар ауданы",
+    "Ұйғыр ауданы",
+    "Жамбыл ауданы"
+  ],
+  "Атырау облысы": [
+    "Атырау",
+    "Индер ауданы",
+    "Исатай ауданы",
+    "Құрманғазы ауданы",
+    "Қызылқоға ауданы",
+    "Мақат ауданы",
+    "Махамбет ауданы",
+    "Жылыой ауданы"
+  ],
+  "Шығыс Қазақстан облысы": [
+    "Өскемен",
+    "Глубокое ауданы",
+    "Катонқарағай ауданы",
+    "Күршім ауданы",
+    "Шемонаиха ауданы",
+    "Тарбағатай ауданы",
+    "Ұлан ауданы"
+  ],
+  "Жетісу облысы": [
+    "Талдықорған",
+    "Ақсу ауданы",
+    "Алакөл ауданы",
+    "Ескелді ауданы",
+    "Қаратал ауданы",
+    "Кербұлақ ауданы",
+    "Көксу ауданы",
+    "Панфилов ауданы",
+    "Сарқан ауданы"
+  ],
+  "Қарағанды облысы": [
+    "Қарағанды",
+    "Абай ауданы",
+    "Ақтоғай ауданы",
+    "Бұқар жырау ауданы",
+    "Қарқаралы ауданы",
+    "Нұра ауданы",
+    "Осакаров ауданы",
+    "Шет ауданы"
+  ],
+  "Қостанай облысы": [
+    "Қостанай",
+    "Алтынсарин ауданы",
+    "Амангелді ауданы",
+    "Әулиекөл ауданы",
+    "Денисов ауданы",
+    "Федоров ауданы",
+    "Қамысты ауданы",
+    "Қарабалық ауданы",
+    "Қарасу ауданы",
+    "Меңдіқара ауданы",
+    "Науырзым ауданы",
+    "Сарыкөл ауданы",
+    "Таран ауданы",
+    "Ұзынкөл ауданы",
+    "Жангелді ауданы",
+    "Жітіқара ауданы"
+  ],
+  "Қызылорда облысы": [
+    "Қызылорда",
+    "Арал ауданы",
+    "Қармақшы ауданы",
+    "Қазалы ауданы",
+    "Шиелі ауданы",
+    "Сырдария ауданы",
+    "Жалағаш ауданы",
+    "Жаңақорған ауданы"
+  ],
+  "Маңғыстау облысы": [
+    "Ақтау",
+    "Бейнеу ауданы",
+    "Қарақия ауданы",
+    "Маңғыстау ауданы",
+    "Мұнайлы ауданы",
+    "Түпқараған ауданы",
+    "Жаңаөзен",
+    "Форт-Шевченко",
+    "Шетпе"
+  ],
+  "Солтүстік Қазақстан облысы": [
+    "Петропавл",
+    "Айыртау ауданы",
+    "Аққайың ауданы",
+    "Ақжар ауданы",
+    "Есіл ауданы",
+    "Ғабит Мүсірепов ауданы",
+    "Қызылжар ауданы",
+    "Мағжан Жұмабаев ауданы",
+    "Мамлют ауданы",
+    "Шал ақын ауданы",
+    "Тайынша ауданы",
+    "Тимирязев ауданы",
+    "Уәлиханов ауданы",
+    "Жамбыл ауданы"
+  ],
+  "Павлодар облысы": [
+    "Павлодар",
+    "Аққулы ауданы",
+    "Ақтоғай ауданы",
+    "Баянауыл ауданы",
+    "Ертіс ауданы",
+    "Қашыр ауданы",
+    "Май ауданы",
+    "Павлодар ауданы",
+    "Шарбақты ауданы",
+    "Успен ауданы",
+    "Железин ауданы"
+  ],
+  "Түркістан облысы": [
+    "Түркістан",
+    "Бәйдібек ауданы",
+    "Қазығұрт ауданы",
+    "Мақтаарал ауданы",
+    "Ордабасы ауданы",
+    "Отырар ауданы",
+    "Сарыағаш ауданы",
+    "Сайрам ауданы",
+    "Шардара ауданы",
+    "Созақ ауданы",
+    "Төле би ауданы",
+    "Түлкібас ауданы"
+  ],
+  "Ұлытау облысы": [
+    "Жезқазған",
+    "Ұлытау ауданы",
+    "Жаңаарқа ауданы"
+  ],
+  "Батыс Қазақстан облысы": [
+    "Орал",
+    "Ақжайық ауданы",
+    "Бөкей ордасы ауданы",
+    "Бөрлі ауданы",
+    "Қаратөбе ауданы",
+    "Қазталов ауданы",
+    "Шыңғырлау ауданы",
+    "Сырым ауданы",
+    "Тасқала ауданы",
+    "Теректі ауданы",
+    "Зеленов ауданы",
+    "Жаңақала ауданы",
+    "Жәнібек ауданы"
+  ],
+  "Жамбыл облысы": [
+    "Тараз",
+    "Байзақ ауданы",
+    "Қордай ауданы",
+    "Меркі ауданы",
+    "Мойынқұм ауданы",
+    "Сарысу ауданы",
+    "Шу ауданы",
+    "Талас ауданы",
+    "Тұрар Рысқұлов ауданы",
+    "Жамбыл ауданы",
+    "Жуалы ауданы"
+  ],
+  "Астана қаласы": [
+    "Алматы ауданы",
+    "Байқоңыр ауданы",
+    "Есіл ауданы",
+    "Сарыарқа ауданы"
+  ],
+  "Алматы қаласы": [
+    "Алатау ауданы",
+    "Алмалы ауданы",
+    "Әуезов ауданы",
+    "Бостандық ауданы",
+    "Жетісу ауданы",
+    "Медеу ауданы",
+    "Наурызбай ауданы",
+    "Түрксіб ауданы"
+  ],
+  "Шымкент қаласы": [
+    "Абай ауданы",
+    "Аль-Фараби ауданы",
+    "Еңбекші ауданы",
+    "Қаратау ауданы"
+  ]
+};
+    const departments = {
+        "HR": [
+      "Жұмысшыларды басқарушы", "Жалақы есептеуші", "Жұмысшы кадрларды тіркеуші", "HR кеңесшісі", "HR менеджері",
+      "Құжаттарды рәсімдеуші", "Серіктестіктермен жұмыс", "Жұмысқа қабылдау бөлімінің басшысы", "Әлеуметтік қауіпсіздік маманы", "Қызметкерлерді оқыту"
+    ],
+    "IT": [
+      "Бағдарламалаушы", "Жүйе әкімшісі", "Қауіпсіздік маманы", "Бағдарламалық жасақтама инженері", "Деректер базасы әкімшісі",
+      "Желілік әкімші", "Веб-дизайнер", "IT менеджері", "IT қолдау маманы", "Жоба жетекшісі"
+    ],
+    "Қаржы": [
+      "Қаржы директоры", "Қаржы кеңесшісі", "Бухгалтер", "Кассир", "Қаржылық талдаушы", "Экономист", "Қаржылық есепші",
+      "Тәуекелдерді басқарушы", "Ақша ағындарын басқарушы", "Бюджеттеуші"
+    ],
+    "Маркетинг": [
+      "Маркетинг менеджері", "Жарнама маманы", "Бренд менеджері", "Өнімді дамыту маманы", "Сату маманы", "Саудалық директор",
+      "Маркетинг бойынша кеңесші", "Пиар маманы", "SEO маманы", "Әлеуметтік медиа маманы"
+    ],
+    "Заң": [
+      "Заңгер", "Құқық қорғаушы", "Келісім-шарт бойынша кеңесші", "Компанияның адвокаты", "Құқықтық талдаушы", "Құқықтық инспектор",
+      "Соттың атқарушы маманы", "Жер қатынастары бойынша маман", "Заң бөлімінің жетекшісі", "Талап қоюшы"
+    ],
+    "Басқару": [
+      "Бас директор", "Бас менеджер", "Операциялық директор", "Құрылыс менеджері", "Жобалар менеджері", "Логистика маманы",
+      "Қызметтер менеджері", "Бизнес өкілі", "Іскерлік қатынастар бойынша кеңесші", "Операциялық менеджер"
+    ],
+    "Өндіріс": [
+      "Өндіріс менеджері", "Құрылысшы", "Механик", "Жабдықтау маманы", "Энергетик", "Құрал-сайман жөндеуші", "Сапа бақылаушы",
+      "Көлік маманы", "Жоба инженері", "Кеңесші"
+    ]
+    };
+
+    function showPopup(message) {
+      const popup = document.getElementById("popupMessage");
+      popup.textContent = message;
+      popup.style.display = "block";
+      setTimeout(() => { popup.style.display = "none"; }, 3000);
+    }
+
+    document.getElementById("province").addEventListener("change", function() {
+      const districts = provinces[this.value] || [];
+      const districtSelect = document.getElementById("district");
+      districtSelect.innerHTML = "";
+      districts.forEach(d => {
+        const option = document.createElement("option");
+        option.textContent = d;
+        option.value = d;
+        districtSelect.appendChild(option);
+      });
+    });
+
+    document.getElementById("department").addEventListener("change", function() {
+      const positions = departments[this.value] || [];
+      const positionSelect = document.getElementById("position");
+      positionSelect.innerHTML = "";
+      positions.forEach(p => {
+        const option = document.createElement("option");
+        option.textContent = p;
+        option.value = p;
+        positionSelect.appendChild(option);
+      });
+    });
+
+    window.onload = () => {
+      const provinceSelect = document.getElementById("province");
+      Object.keys(provinces).forEach(prov => {
+        const option = document.createElement("option");
+        option.value = prov;
+        option.textContent = prov;
+        provinceSelect.appendChild(option);
+      });
+
+      const departmentSelect = document.getElementById("department");
+      Object.keys(departments).forEach(dep => {
+        const option = document.createElement("option");
+        option.value = dep;
+        option.textContent = dep;
+        departmentSelect.appendChild(option);
+      });
+    };
+
+    document.getElementById("employeeForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      let valid = true;
+      const fields = ["name", "dob", "gender", "province", "district", "street", "phone", "experience", "department", "position", "salary"];
+
+      fields.forEach(id => {
+        const input = document.getElementById(id);
+        const errorDiv = document.getElementById(id + "Error");
+        if (!input.value.trim()) {
+          valid = false;
+          input.classList.add("error");
+          errorDiv.textContent = "Бұл өріс толтырылмады";
+        } else {
+          input.classList.remove("error");
+          errorDiv.textContent = "";
+        }
+      });
+
+      if (!valid) {
+        showPopup("Барлық өрісті толтырыңыз!");
+        return;
+      }
+
+      const formData = new FormData();
+      fields.forEach(id => {
+        formData.append(id, document.getElementById(id).value);
+      });
+
+      fetch("add_employee.php", {
+        method: "POST",
+        body: formData
+      })
+      .then(response => response.text())
+      .then(result => {
+        if (result.trim() === "success") {
+          showPopup("Сәтті сақталды! Жақын арада сізбен хабарласамыз.");
+          document.getElementById("employeeForm").reset();
+          document.getElementById("district").innerHTML = "";
+          document.getElementById("position").innerHTML = "";
+        } else {
+          showPopup(result);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
